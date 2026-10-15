@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a new condition, action, token or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the files and the result you want, not only the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you tried
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Project principles
+      options:
+        - label: The feature works fully offline (no account, cloud or telemetry).
+          required: true

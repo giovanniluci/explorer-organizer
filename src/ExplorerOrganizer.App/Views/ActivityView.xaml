@@ -1,0 +1,57 @@
+<UserControl x:Class="ExplorerOrganizer.App.Views.ActivityView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AutomationProperties.AutomationId="Page_history">
+    <DockPanel Margin="4,4,14,14">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="{DynamicResource S.Activity.Title}" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="{DynamicResource S.Activity.Subtitle}" Style="{StaticResource Caption}" Margin="0,0,0,12" />
+            <DockPanel Margin="0,0,0,10">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="6,0,0,0">
+                    <Button Style="{StaticResource IconButton}" Content="&#xEDE1;" Click="Export_Click"
+                            ToolTip="{DynamicResource S.Activity.Export}" AutomationProperties.Name="{DynamicResource S.Activity.Export}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE838;" Click="OpenFolder_Click"
+                            ToolTip="{DynamicResource S.Activity.OpenLogFolder}" AutomationProperties.Name="{DynamicResource S.Activity.OpenLogFolder}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE894;" Click="Clear_Click"
+                            ToolTip="{DynamicResource S.Activity.ClearView}" AutomationProperties.Name="{DynamicResource S.Activity.ClearView}" />
+                </StackPanel>
+                <Grid>
+                    <TextBox x:Name="FilterBox" TextChanged="Filter_TextChanged" Padding="30,5,8,5"
+                             AutomationProperties.Name="{DynamicResource S.Activity.Filter}" ToolTip="{DynamicResource S.Activity.Filter}" />
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" FontSize="12" Margin="10,0,0,0" IsHitTestVisible="False" Foreground="{DynamicResource TextMuted}" />
+                </Grid>
+            </DockPanel>
+        </StackPanel>
+
+        <Grid>
+            <TextBlock x:Name="EmptyText" Text="{DynamicResource S.Dash.NoActivity}" Style="{StaticResource Caption}" Margin="4,8" Visibility="Collapsed" />
+            <ListBox x:Name="LogList" ItemContainerStyle="{StaticResource CardItem}" AutomationProperties.Name="{DynamicResource S.Activity.Title}"
+                     AutomationProperties.AutomationId="LogList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding Time, StringFormat='dd/MM HH:mm:ss'}" Style="{StaticResource Caption}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8" Fill="{Binding Status, Converter={StaticResource StatusBrush}}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Kind, Converter={StaticResource EnumText}}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Status, Converter={StaticResource EnumText}}" Style="{StaticResource Caption}" Margin="8,1,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                            <TextBlock Text="{Binding Source}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding Source}" Margin="16,3,0,0" />
+                            <TextBlock Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding Target}" Margin="16,0,0,0">
+                                <Run Text="→ " /><Run Text="{Binding Target, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Text="{Binding Message}" Style="{StaticResource Caption}" Margin="16,2,0,0" Foreground="{Binding Status, Converter={StaticResource StatusBrush}}">
+                                <TextBlock.Visibility>
+                                    <Binding Path="Message" Converter="{StaticResource BoolToVis}" />
+                                </TextBlock.Visibility>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</UserControl>

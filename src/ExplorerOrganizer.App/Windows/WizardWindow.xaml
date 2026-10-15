@@ -1,0 +1,101 @@
+<Window x:Class="ExplorerOrganizer.App.Windows.WizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:inf="clr-namespace:ExplorerOrganizer.App.Infrastructure"
+        Title="{DynamicResource S.Wizard.Title}" Width="760" Height="600" ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14">
+    <DockPanel Margin="32,28">
+        <!-- Step indicator -->
+        <TextBlock x:Name="StepText" DockPanel.Dock="Top" Style="{StaticResource Muted}" Margin="0,0,0,8" />
+
+        <Grid DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="SkipButton" Content="{DynamicResource S.Wizard.Skip}" Click="Skip_Click" HorizontalAlignment="Left" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="BackButton" Content="{DynamicResource S.Wizard.Back}" Click="Back_Click" />
+                <Button x:Name="NextButton" Style="{StaticResource PrimaryButton}" Click="Next_Click" Margin="0" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </Grid>
+
+        <Grid>
+            <!-- 1: welcome -->
+            <StackPanel x:Name="Step1">
+                <Image Source="/Assets/app.ico" Width="56" Height="56" HorizontalAlignment="Left" Margin="0,0,0,12" />
+                <TextBlock Text="{DynamicResource S.Wizard.Welcome}" Style="{StaticResource H1}" />
+                <TextBlock Text="{DynamicResource S.Wizard.WelcomeText}" Style="{StaticResource Muted}" Margin="0,0,0,24" />
+                <Label Content="{DynamicResource S.Settings.Language}" Target="{Binding ElementName=LanguageBox}" />
+                <ComboBox x:Name="LanguageBox" ItemsSource="{x:Static inf:EnumOptions.Languages}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          Width="260" HorizontalAlignment="Left" SelectionChanged="Language_Changed" />
+                <Label Content="{DynamicResource S.Settings.Theme}" Target="{Binding ElementName=ThemeBox}" Margin="0,12,0,0" />
+                <ComboBox x:Name="ThemeBox" ItemsSource="{x:Static inf:EnumOptions.Themes}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          Width="260" HorizontalAlignment="Left" SelectionChanged="Theme_Changed" />
+            </StackPanel>
+
+            <!-- 2: presets -->
+            <StackPanel x:Name="Step2" Visibility="Collapsed">
+                <TextBlock Text="{DynamicResource S.Wizard.PresetsTitle}" Style="{StaticResource H1}" />
+                <TextBlock Text="{DynamicResource S.Wizard.PresetsText}" Style="{StaticResource Muted}" Margin="0,0,0,16" />
+                <ItemsControl x:Name="PresetList" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <TextBox Grid.Column="1" Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" Margin="8,0" IsEnabled="{Binding Selected}"
+                                             AutomationProperties.Name="{Binding Title}" />
+                                    <Button Grid.Column="2" Content="{DynamicResource S.Common.Browse}" Click="BrowsePreset_Click" Margin="0" IsEnabled="{Binding Selected}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- 3: automation -->
+            <StackPanel x:Name="Step3" Visibility="Collapsed">
+                <TextBlock Text="{DynamicResource S.Wizard.AutomationTitle}" Style="{StaticResource H1}" />
+                <TextBlock Text="{DynamicResource S.Wizard.AutomationText}" Style="{StaticResource Muted}" Margin="0,0,0,16" />
+                <RadioButton x:Name="ManualMode" GroupName="Mode" IsChecked="True">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource S.Wizard.Manual}" FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource S.Wizard.ManualText}" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="RealtimeMode" GroupName="Mode" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource S.Wizard.Realtime}" FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource S.Wizard.RealtimeText}" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <CheckBox x:Name="SimulateFirst" Content="{DynamicResource S.Wizard.SimulateFirst}" Margin="28,6,0,0"
+                          IsEnabled="{Binding IsChecked, ElementName=RealtimeMode}" IsChecked="True" />
+                <Separator Margin="0,16" />
+                <CheckBox x:Name="AutostartBox" Content="{DynamicResource S.Settings.StartWithWindows}" />
+                <CheckBox x:Name="DropTargetBox" Content="{DynamicResource S.Settings.ShowDropTarget}" />
+                <CheckBox x:Name="ContextMenuBox" Content="{DynamicResource S.Settings.ContextMenu}" IsChecked="True" />
+            </StackPanel>
+
+            <!-- 4: done -->
+            <StackPanel x:Name="Step4" Visibility="Collapsed">
+                <TextBlock Text="{DynamicResource S.Wizard.DoneTitle}" Style="{StaticResource H1}" />
+                <TextBlock x:Name="DoneText" Style="{StaticResource Muted}" Margin="0,0,0,16" />
+                <TextBlock Text="{DynamicResource S.Wizard.DoneTips}" TextWrapping="Wrap" LineHeight="24" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

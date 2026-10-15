@@ -1,0 +1,74 @@
+<UserControl x:Class="ExplorerOrganizer.App.Views.FoldersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:inf="clr-namespace:ExplorerOrganizer.App.Infrastructure"
+             AutomationProperties.AutomationId="Page_folders">
+    <DockPanel Margin="4,4,14,14">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="{DynamicResource S.Folders.Title}" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="{DynamicResource S.Folders.Subtitle}" Style="{StaticResource Caption}" Margin="0,0,0,12" />
+
+            <ContentControl Style="{StaticResource CardHost}" Padding="12,10">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="{DynamicResource S.Rules.Profile}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <ComboBox x:Name="ProfileCombo" DisplayMemberPath="Name" SelectionChanged="ProfileCombo_SelectionChanged"
+                                  AutomationProperties.Name="{DynamicResource S.Rules.Profile}" />
+                    </DockPanel>
+                    <CheckBox x:Name="PauseSwitch" Style="{StaticResource Switch}" Content="{DynamicResource S.Folders.Monitoring}" Click="Pause_Click" Margin="0,10,0,0"
+                              AutomationProperties.AutomationId="MonitoringSwitch" />
+                </StackPanel>
+            </ContentControl>
+
+            <DockPanel Margin="0,2,0,10">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource IconButton}" Content="&#xE70F;" Click="EditFolder_Click"
+                            ToolTip="{DynamicResource S.Common.Edit}" AutomationProperties.Name="{DynamicResource S.Common.Edit}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE768;" Click="ScanFolder_Click"
+                            ToolTip="{DynamicResource S.Profiles.ScanFolder}" AutomationProperties.Name="{DynamicResource S.Profiles.ScanFolder}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE74D;" Click="DeleteFolder_Click" Foreground="{DynamicResource Danger}"
+                            ToolTip="{DynamicResource S.Common.Remove}" AutomationProperties.Name="{DynamicResource S.Common.Remove}" />
+                </StackPanel>
+                <Button Style="{StaticResource PrimaryButton}" Click="AddFolder_Click" HorizontalAlignment="Left" AutomationProperties.AutomationId="AddFolderButton">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE8F4;" Margin="0,0,8,0" FontSize="12" />
+                        <TextBlock Text="{DynamicResource S.Profiles.AddFolder}" />
+                    </StackPanel>
+                </Button>
+            </DockPanel>
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{DynamicResource S.Profiles.FoldersHint}" Style="{StaticResource Caption}" Margin="0,6,0,0" />
+        <Grid>
+            <TextBlock x:Name="EmptyText" Text="{DynamicResource S.Folders.Empty}" Style="{StaticResource Caption}" Margin="4,8" Visibility="Collapsed" />
+            <ListBox x:Name="FolderList" ItemContainerStyle="{StaticResource CardItem}" MouseDoubleClick="FolderList_MouseDoubleClick"
+                     AutomationProperties.Name="{DynamicResource S.Profiles.Folders}" AutomationProperties.AutomationId="FolderList"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8B7;" Margin="0,0,8,0" Foreground="{DynamicResource Link}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Path}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" VerticalAlignment="Center" />
+                                <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding Enabled}" Click="Persist" Margin="8,0,0,0"
+                                          AutomationProperties.Name="{DynamicResource S.Common.Enabled}" />
+                            </Grid>
+                            <TextBlock Text="{Binding Converter={StaticResource FolderSummary}}" Style="{StaticResource Caption}" Margin="24,2,0,6" />
+                            <DockPanel Margin="24,0,0,0">
+                                <TextBlock Text="{DynamicResource S.Folders.When}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{x:Static inf:EnumOptions.Triggers}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                                          SelectedValue="{Binding Trigger}" SelectionChanged="Trigger_SelectionChanged" MinHeight="28"
+                                          AutomationProperties.Name="{DynamicResource S.Folder.Trigger}" />
+                            </DockPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</UserControl>

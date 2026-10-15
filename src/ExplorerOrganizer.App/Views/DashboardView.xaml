@@ -1,0 +1,167 @@
+<UserControl x:Class="ExplorerOrganizer.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:inf="clr-namespace:ExplorerOrganizer.App.Infrastructure"
+             AutomationProperties.AutomationId="Page_home">
+    <UserControl.Resources>
+        <Style x:Key="CardIcon" TargetType="TextBlock" BasedOn="{StaticResource Icon}">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+        </Style>
+        <Style x:Key="CardValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Link}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer Style="{StaticResource ScrollPage}">
+        <StackPanel Margin="4,4,14,14">
+
+            <!-- (a) Suggestion banner with an original illustration -->
+            <ContentControl Style="{StaticResource CardHost}" Padding="14,12" AutomationProperties.AutomationId="HomeBanner">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Viewbox Width="52" Height="52" VerticalAlignment="Center" Margin="0,0,14,0" AutomationProperties.Name="">
+                        <Canvas Width="64" Height="64">
+                            <Ellipse Width="64" Height="64" Fill="{DynamicResource IllustrationBack}" />
+                            <Path Data="M14,22 L25,22 L29,26 L50,26 Q52,26 52,28 L52,46 Q52,48 50,48 L14,48 Q12,48 12,46 L12,24 Q12,22 14,22 Z" Fill="{DynamicResource IllustrationSoft}" />
+                            <Rectangle Canvas.Left="18" Canvas.Top="17" Width="13" Height="17" RadiusX="1.5" RadiusY="1.5" Fill="White" Stroke="{DynamicResource IllustrationSoft}" StrokeThickness="0.8">
+                                <Rectangle.RenderTransform><RotateTransform Angle="-10" /></Rectangle.RenderTransform>
+                            </Rectangle>
+                            <Rectangle Canvas.Left="31" Canvas.Top="14" Width="13" Height="17" RadiusX="1.5" RadiusY="1.5" Fill="White" Stroke="{DynamicResource IllustrationSoft}" StrokeThickness="0.8">
+                                <Rectangle.RenderTransform><RotateTransform Angle="8" /></Rectangle.RenderTransform>
+                            </Rectangle>
+                            <Path Data="M12,32 L52,32 L52,46 Q52,48 50,48 L14,48 Q12,48 12,46 Z" Fill="{DynamicResource IllustrationFront}" />
+                            <Path Data="M26,40 L30,44 L38,36" Stroke="White" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                            <Path Data="M52,6 L53.6,10.4 L58,12 L53.6,13.6 L52,18 L50.4,13.6 L46,12 L50.4,10.4 Z" Fill="{DynamicResource IllustrationFront}" />
+                            <Ellipse Canvas.Left="8" Canvas.Top="10" Width="4" Height="4" Fill="{DynamicResource IllustrationSoft}" />
+                        </Canvas>
+                    </Viewbox>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="BannerTitle" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.AutomationId="BannerTitle" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="12.5" Margin="0,3,0,0">
+                            <Run x:Name="BannerHint" />
+                            <Hyperlink x:Name="BannerLink" Click="BannerAction_Click" Foreground="{DynamicResource Link}" TextDecorations="{x:Null}"
+                                       AutomationProperties.AutomationId="BannerLink"><Run x:Name="BannerLinkText" /></Hyperlink><Run x:Name="BannerTail" />
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </ContentControl>
+
+            <!-- (b) Main "Organize" card -->
+            <ContentControl Style="{StaticResource CardHost}" AutomationProperties.AutomationId="OrganizeCard">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Click="SetAuto_Click" VerticalAlignment="Center"
+                                AutomationProperties.AutomationId="SetAutoLink">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE916;" FontSize="13" Margin="0,0,5,0" />
+                                <TextBlock Text="{DynamicResource S.Home.SetAuto}" FontSize="12.5" />
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE8CB;" FontSize="17" Margin="0,0,8,0" />
+                            <TextBlock Text="{DynamicResource S.Home.Organize}" Style="{StaticResource CardTitle}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock Text="{DynamicResource S.Home.OrganizeHint}" Style="{StaticResource Caption}" Margin="0,4,0,14" />
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <inf:BarIndicator x:Name="PendingBar" Height="38" Margin="0,0,10,0" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="PendingValue" FontSize="18" FontWeight="SemiBold" Text="…" AutomationProperties.AutomationId="PendingValue" />
+                                <TextBlock Text="{DynamicResource S.Home.Pending}" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <inf:BarIndicator x:Name="RulesBar" Height="38" Margin="0,0,10,0" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="RulesValue" FontSize="18" FontWeight="SemiBold" AutomationProperties.AutomationId="RulesValue" />
+                                <TextBlock Text="{DynamicResource S.Home.ActiveRules}" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Style="{StaticResource HeroButton}" Click="Organize_Click" Content="{DynamicResource S.Home.OrganizeNow}"
+                            AutomationProperties.AutomationId="OrganizeNowButton" />
+                </StackPanel>
+            </ContentControl>
+
+            <!-- (c) 2x2 grid of cards -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Button Style="{StaticResource CardButton}" Click="RulesCard_Click" AutomationProperties.AutomationId="CardRules"
+                        AutomationProperties.Name="{DynamicResource S.Home.CardRules}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource CardIcon}" Text="&#xE71C;" />
+                            <TextBlock Text="{DynamicResource S.Home.CardRules}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock x:Name="RulesCardLabel" Style="{StaticResource Caption}" Margin="0,18,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="RulesCardValue" Style="{StaticResource CardValue}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="2" Style="{StaticResource CardButton}" Click="FoldersCard_Click" AutomationProperties.AutomationId="CardFolders"
+                        AutomationProperties.Name="{DynamicResource S.Home.CardMonitor}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource CardIcon}" Text="&#xE7B3;" />
+                            <TextBlock Text="{DynamicResource S.Home.CardMonitor}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock x:Name="MonitorCardLabel" Style="{StaticResource Caption}" Margin="0,18,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="MonitorCardValue" Style="{StaticResource CardValue}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Row="2" Style="{StaticResource CardButton}" Click="PreviewCard_Click" AutomationProperties.AutomationId="CardPreview"
+                        AutomationProperties.Name="{DynamicResource S.Home.CardPreview}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource CardIcon}" Text="&#xE9D9;" />
+                            <TextBlock Text="{DynamicResource S.Home.CardPreview}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock x:Name="PreviewCardLabel" Style="{StaticResource Caption}" Margin="0,18,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{DynamicResource S.Home.CardPreviewValue}" Style="{StaticResource CardValue}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource CardButton}" Click="HistoryCard_Click" AutomationProperties.AutomationId="CardHistory"
+                        AutomationProperties.Name="{DynamicResource S.Home.CardHistoryHint}" ToolTip="{DynamicResource S.Home.CardHistoryHint}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource CardIcon}" Text="&#xE7A7;" />
+                            <TextBlock Text="{DynamicResource S.Home.CardHistory}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock Text="{DynamicResource S.Home.CardHistoryLabel}" Style="{StaticResource Caption}" Margin="0,18,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="HistoryCardValue" Style="{StaticResource CardValue}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <TextBlock x:Name="FooterText" Style="{StaticResource Caption}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,14,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

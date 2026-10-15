@@ -1,0 +1,58 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **remove personal paths and file names** from logs and screenshots before posting.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a rule with condition ... and action ...
+        2. Drop a file named ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: rule
+    attributes:
+      label: Rule / profile (optional)
+      description: Toolbox → Export the profile and paste the relevant rule JSON here.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: Explorer Organizer version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options: [Installer, Portable, Built from source]
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Activity log excerpt (optional)
+      description: History page → Export. Paste only the relevant lines.
+      render: text

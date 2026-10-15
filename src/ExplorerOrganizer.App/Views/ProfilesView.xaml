@@ -1,0 +1,65 @@
+<UserControl x:Class="ExplorerOrganizer.App.Views.ProfilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AutomationProperties.AutomationId="Page_rules">
+    <DockPanel Margin="4,4,14,14">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="{DynamicResource S.Rules.Title}" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="{DynamicResource S.Rules.Subtitle}" Style="{StaticResource Caption}" Margin="0,0,0,12" />
+
+            <ContentControl Style="{StaticResource CardHost}" Padding="12,10">
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Rules.Profile}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <ComboBox x:Name="ProfileCombo" DisplayMemberPath="Name" SelectionChanged="ProfileCombo_SelectionChanged"
+                              AutomationProperties.Name="{DynamicResource S.Rules.Profile}" AutomationProperties.AutomationId="RulesProfileCombo" />
+                </DockPanel>
+            </ContentControl>
+
+            <DockPanel Margin="0,2,0,10">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource IconButton}" Content="&#xE70F;" Click="EditRule_Click"
+                            ToolTip="{DynamicResource S.Common.Edit}" AutomationProperties.Name="{DynamicResource S.Common.Edit}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE8C8;" Click="DuplicateRule_Click"
+                            ToolTip="{DynamicResource S.Common.Duplicate}" AutomationProperties.Name="{DynamicResource S.Common.Duplicate}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE70E;" Click="RuleUp_Click"
+                            ToolTip="{DynamicResource S.Common.MoveUp}" AutomationProperties.Name="{DynamicResource S.Common.MoveUp}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE70D;" Click="RuleDown_Click"
+                            ToolTip="{DynamicResource S.Common.MoveDown}" AutomationProperties.Name="{DynamicResource S.Common.MoveDown}" />
+                    <Button Style="{StaticResource IconButton}" Content="&#xE74D;" Click="DeleteRule_Click" Foreground="{DynamicResource Danger}"
+                            ToolTip="{DynamicResource S.Common.Delete}" AutomationProperties.Name="{DynamicResource S.Common.Delete}" />
+                </StackPanel>
+                <Button Style="{StaticResource PrimaryButton}" Click="AddRule_Click" HorizontalAlignment="Left" AutomationProperties.AutomationId="AddRuleButton">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" Margin="0,0,8,0" FontSize="12" />
+                        <TextBlock Text="{DynamicResource S.Profiles.AddRule}" />
+                    </StackPanel>
+                </Button>
+            </DockPanel>
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{DynamicResource S.Profiles.OrderHint}" Style="{StaticResource Caption}" Margin="0,6,0,0" />
+        <Grid>
+            <TextBlock x:Name="EmptyText" Text="{DynamicResource S.Rules.Empty}" Style="{StaticResource Caption}" Margin="4,8" Visibility="Collapsed" />
+            <ListBox x:Name="RuleList" ItemContainerStyle="{StaticResource CardItem}" MouseDoubleClick="RuleList_MouseDoubleClick" KeyDown="RuleList_KeyDown"
+                     AutomationProperties.Name="{DynamicResource S.Profiles.Rules}" AutomationProperties.AutomationId="RuleList"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Converter={StaticResource RuleSummary}}" Style="{StaticResource Caption}" MaxHeight="34" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Enabled}" Click="Persist" Margin="0"
+                                      AutomationProperties.Name="{DynamicResource S.Common.Enabled}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</UserControl>

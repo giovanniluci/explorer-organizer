@@ -1,0 +1,24 @@
+<Window x:Class="ExplorerOrganizer.App.Windows.DropTargetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Explorer Organizer – Drop" Width="96" Height="96"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False"
+        AllowDrop="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" Drop="Window_Drop"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseDoubleClick="Window_MouseDoubleClick"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <Border x:Name="Body" CornerRadius="20" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Accent}" BorderThickness="2" Margin="4"
+            ToolTip="{DynamicResource S.Drop.Tooltip}">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.35" />
+        </Border.Effect>
+        <Border.ContextMenu>
+            <ContextMenu x:Name="Menu" Opened="Menu_Opened" />
+        </Border.ContextMenu>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Image Source="/Assets/app.ico" Width="36" Height="36" />
+            <TextBlock x:Name="ProfileName" FontSize="10" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="4,4,4,0"
+                       TextTrimming="CharacterEllipsis" MaxWidth="80" />
+        </StackPanel>
+    </Border>
+</Window>

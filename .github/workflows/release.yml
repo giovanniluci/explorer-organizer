@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # create the release and upload assets (GITHUB_TOKEN only)
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches Directory.Build.props
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $version = $props.Project.PropertyGroup.Version
+          if ("v$version" -ne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME does not match version $version" }
+
+      # Engine tests run inside build.ps1. UI tests drive the app with UI Automation and need an interactive
+      # desktop, so they run locally before tagging (see CONTRIBUTING.md).
+      - name: Build (tests + exe + portable zip + installer)
+        shell: powershell
+        run: .\build.ps1 -BootstrapTools -SkipUiTests
+
+      - name: Collect assets and checksums
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item installer/Output/ExplorerOrganizer-Setup.exe dist/
+          Copy-Item artifacts/ExplorerOrganizer-Portable.zip dist/
+          Get-ChildItem dist -File | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          $v = $env:GITHUB_REF_NAME.TrimStart('v')
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -SimpleMatch "## [$v]").LineNumber
+          $notes = @()
+          if ($start) {
+            foreach ($l in $lines[$start..($lines.Count - 1)]) { if ($l -match '^## \[|^\[') { break }; $notes += $l }
+          }
+          $sums = Get-Content dist/SHA256SUMS.txt
+          $body = @($notes) + '' + '### Download' + '' +
+            '- **ExplorerOrganizer-Setup.exe**: installer (per-user, no admin rights)' +
+            '- **ExplorerOrganizer-Portable.zip**: portable edition, extract and run' + '' +
+            'Windows 10 1809+ / 11, x64. No .NET install needed. The files are not code-signed yet, so SmartScreen may warn on first launch: *More info → Run anyway*.' + '' +
+            '### SHA-256' + '' + '```' + $sums + '```'
+          $body | Set-Content release-notes.md -Encoding utf8
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME dist/* --title "Explorer Organizer $env:GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag

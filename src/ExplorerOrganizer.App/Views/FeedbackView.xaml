@@ -1,0 +1,32 @@
+<UserControl x:Class="ExplorerOrganizer.App.Views.FeedbackView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AutomationProperties.AutomationId="Page_feedback">
+    <ScrollViewer Style="{StaticResource ScrollPage}">
+        <StackPanel Margin="4,4,14,14">
+            <TextBlock Text="{DynamicResource S.Feedback.Title}" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="{DynamicResource S.Feedback.Subtitle}" Style="{StaticResource Caption}" Margin="0,0,0,12" />
+
+            <ContentControl Style="{StaticResource CardHost}">
+                <StackPanel>
+                    <Label Content="{DynamicResource S.Feedback.Message}" Target="{Binding ElementName=FeedbackBox}" />
+                    <TextBox x:Name="FeedbackBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="140" VerticalContentAlignment="Top"
+                             VerticalScrollBarVisibility="Auto" AutomationProperties.Name="{DynamicResource S.Feedback.Message}" />
+                    <CheckBox x:Name="IncludeInfo" Content="{DynamicResource S.Feedback.IncludeInfo}" IsChecked="True" Margin="0,10,0,10" />
+                    <WrapPanel>
+                        <Button Style="{StaticResource PrimaryButton}" Click="Save_Click" Margin="0,0,8,6" Content="{DynamicResource S.Feedback.Save}" />
+                        <Button Click="Copy_Click" Margin="0,0,8,6" Content="{DynamicResource S.Feedback.Copy}" />
+                    </WrapPanel>
+                    <TextBlock x:Name="StatusText" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                </StackPanel>
+            </ContentControl>
+
+            <ContentControl Style="{StaticResource CardHost}">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource S.Feedback.About}" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
+                    <TextBlock x:Name="InfoText" Style="{StaticResource Caption}" />
+                </StackPanel>
+            </ContentControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

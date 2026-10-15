@@ -1,0 +1,61 @@
+<Window x:Class="ExplorerOrganizer.App.Windows.FolderEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="clr-namespace:ExplorerOrganizer.Core.Model;assembly=ExplorerOrganizer.Core"
+        xmlns:inf="clr-namespace:ExplorerOrganizer.App.Infrastructure"
+        Title="{DynamicResource S.Folder.Title}" Width="620" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14">
+    <StackPanel Margin="24,20">
+        <Label Content="{DynamicResource S.Folder.Path}" Target="{Binding ElementName=PathBox}" />
+        <DockPanel Margin="0,0,0,4">
+            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Click="Browse_Click" Margin="8,0,0,0" />
+            <TextBox x:Name="PathBox" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+        <TextBlock x:Name="Resolved" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,12" />
+
+        <CheckBox Content="{DynamicResource S.Common.Enabled}" IsChecked="{Binding Enabled}" />
+        <CheckBox Content="{DynamicResource S.Folder.IncludeSubfolders}" IsChecked="{Binding IncludeSubfolders}" />
+
+        <Label Content="{DynamicResource S.Folder.Trigger}" Target="{Binding ElementName=TriggerBox}" Margin="0,12,0,0" />
+        <ComboBox x:Name="TriggerBox" ItemsSource="{x:Static inf:EnumOptions.Triggers}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                  SelectedValue="{Binding Trigger}" HorizontalAlignment="Left" MinWidth="260" />
+
+        <StackPanel Margin="0,10,0,0">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Trigger}" Value="{x:Static m:TriggerMode.Interval}">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Label Content="{DynamicResource S.Folder.IntervalMinutes}" Target="{Binding ElementName=IntervalBox}" />
+            <TextBox x:Name="IntervalBox" Text="{Binding IntervalMinutes}" Width="100" HorizontalAlignment="Left" />
+        </StackPanel>
+        <StackPanel Margin="0,10,0,0">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Trigger}" Value="{x:Static m:TriggerMode.Daily}">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Label Content="{DynamicResource S.Folder.DailyTime}" Target="{Binding ElementName=TimeBox}" />
+            <TextBox x:Name="TimeBox" Text="{Binding DailyTime}" Width="100" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <TextBlock Text="{DynamicResource S.Folder.TriggerHint}" Style="{StaticResource Muted}" FontSize="12" Margin="0,12,0,0" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="{DynamicResource S.Common.Cancel}" IsCancel="True" />
+            <Button Content="{DynamicResource S.Common.Save}" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="Save_Click" Margin="0" MinWidth="110" />
+        </StackPanel>
+    </StackPanel>
+</Window>

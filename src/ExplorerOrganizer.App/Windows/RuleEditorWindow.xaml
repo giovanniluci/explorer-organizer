@@ -1,0 +1,473 @@
+<Window x:Class="ExplorerOrganizer.App.Windows.RuleEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="clr-namespace:ExplorerOrganizer.Core.Model;assembly=ExplorerOrganizer.Core"
+        xmlns:inf="clr-namespace:ExplorerOrganizer.App.Infrastructure"
+        Title="{DynamicResource S.Editor.Title}" Width="980" Height="760" MinWidth="760" MinHeight="520"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14" UseLayoutRounding="True">
+    <Window.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style x:Key="Field" TargetType="FrameworkElement">
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="BlockTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,10,6" />
+        </Style>
+
+        <!-- ============ Conditions ============ -->
+        <DataTemplate x:Key="ConditionRow">
+            <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="8" Padding="10,8,6,2" Margin="0,6,0,0">
+                <DockPanel LastChildFill="True">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;" Click="RemoveCondition_Click" VerticalAlignment="Top"
+                            ToolTip="{DynamicResource S.Common.Remove}" AutomationProperties.Name="{DynamicResource S.Editor.RemoveCondition}" />
+                    <ContentPresenter Content="{Binding}" />
+                </DockPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:ConditionGroup}">
+            <Border BorderBrush="{DynamicResource IfBlock}" BorderThickness="3,0,0,0" Padding="12,2,0,6">
+                <StackPanel>
+                    <WrapPanel>
+                        <TextBlock Text="{DynamicResource S.Editor.Match}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{x:Static inf:EnumOptions.GroupOperators}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                                  SelectedValue="{Binding Operator}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Match}" />
+                        <TextBlock Text="{DynamicResource S.Editor.OfTheseConditions}" Style="{StaticResource FieldLabel}" />
+                        <Button Click="AddCondition_Click" Margin="0,0,8,6" VerticalAlignment="Center" Padding="10,4" MinHeight="28">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" FontSize="12" Margin="0,0,6,0" />
+                                <TextBlock Text="{DynamicResource S.Editor.AddCondition}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="AddGroup_Click" Margin="0,0,8,6" VerticalAlignment="Center" Padding="10,4" MinHeight="28">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8A9;" FontSize="12" Margin="0,0,6,0" />
+                                <TextBlock Text="{DynamicResource S.Editor.AddGroup}" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding Children}" ItemTemplate="{StaticResource ConditionRow}" Focusable="False" />
+                    <TextBlock Text="{DynamicResource S.Editor.EmptyGroup}" Style="{StaticResource Muted}" Margin="0,6,0,0" FontStyle="Italic">
+                        <TextBlock.Visibility>
+                            <Binding Path="Children.Count" Converter="{StaticResource BoolToVis}" ConverterParameter="invert">
+                                <Binding.TargetNullValue>False</Binding.TargetNullValue>
+                            </Binding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:AllFilesCondition}">
+            <TextBlock Text="{DynamicResource S.Cond.AllFiles}" Style="{StaticResource BlockTitle}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:NameCondition}">
+            <WrapPanel>
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.NameTargets}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Target}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.What}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.TextOperators}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Operator}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" MinWidth="220" Margin="0,0,8,6" VerticalAlignment="Center"
+                         AutomationProperties.Name="{DynamicResource S.Editor.Value}" ToolTip="{DynamicResource S.Editor.WildcardHint}" />
+                <CheckBox Content="{DynamicResource S.Editor.CaseSensitive}" IsChecked="{Binding CaseSensitive}" Margin="0,0,8,6" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:ExtensionCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.ExtensionIn}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}" MinWidth="260" Margin="0,0,8,6" VerticalAlignment="Center"
+                         AutomationProperties.Name="{DynamicResource S.Cond.Extension}" />
+                <TextBlock Text="{DynamicResource S.Cond.ExtensionHint}" Style="{StaticResource FieldLabel}" FontSize="12" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:NameContainsCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.NameContains}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Words, UpdateSourceTrigger=PropertyChanged}" MinWidth="260" Margin="0,0,8,6" VerticalAlignment="Center"
+                         AutomationProperties.Name="{DynamicResource S.Cond.NameContains}" />
+                <TextBlock Text="{DynamicResource S.Cond.NameContainsHint}" Style="{StaticResource FieldLabel}" FontSize="12" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:ItemTypeCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.ItemTypeIs}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.ItemKinds}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Kind}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="140" AutomationProperties.Name="{DynamicResource S.Cond.ItemType}" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:FolderContentCondition}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{DynamicResource S.Cond.FolderContentPrefix}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{x:Static inf:EnumOptions.FolderContentMatches}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                              SelectedValue="{Binding Match}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="170" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                    <TextBlock Text="{DynamicResource S.Cond.FolderContentSuffix}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}" MinWidth="200" Margin="0,0,8,6" VerticalAlignment="Center"
+                             AutomationProperties.Name="{DynamicResource S.Cond.FolderContent}" />
+                </WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.FolderContentHint}" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:SizeCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.Size}" Style="{StaticResource FieldLabel}" />
+                <ComboBox x:Name="Cmp" ItemsSource="{x:Static inf:EnumOptions.SizeComparisons}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Comparison}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                <TextBox Text="{Binding Value}" Width="90" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Value}" />
+                <StackPanel x:Name="Second" Orientation="Horizontal" Visibility="Collapsed">
+                    <TextBlock Text="{DynamicResource S.Editor.And}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Value2}" Width="90" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Value2}" />
+                </StackPanel>
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.SizeUnits}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Unit}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="70" AutomationProperties.Name="{DynamicResource S.Editor.Unit}" />
+            </WrapPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Comparison}" Value="{x:Static m:SizeComparison.Between}">
+                    <Setter TargetName="Second" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:DateCondition}">
+            <WrapPanel>
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.DateFields}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Field}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.What}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.DateModes}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Mode}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                <StackPanel x:Name="Relative" Orientation="Horizontal">
+                    <TextBox Text="{Binding Amount}" Width="70" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Value}" />
+                    <ComboBox ItemsSource="{x:Static inf:EnumOptions.TimeUnits}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                              SelectedValue="{Binding Unit}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Unit}" />
+                </StackPanel>
+                <DatePicker x:Name="Absolute" SelectedDate="{Binding Date}" Visibility="Collapsed" Margin="0,0,8,6" VerticalAlignment="Center"
+                            AutomationProperties.Name="{DynamicResource S.Editor.Value}" />
+            </WrapPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Mode}" Value="{x:Static m:DateMode.Before}">
+                    <Setter TargetName="Relative" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="Absolute" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Mode}" Value="{x:Static m:DateMode.After}">
+                    <Setter TargetName="Relative" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="Absolute" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:FileTypeCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.FileTypeIs}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.Categories}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Category}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="160" AutomationProperties.Name="{DynamicResource S.Cond.FileType}" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:AttributeCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.AttributeIs}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.Attributes}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Attribute}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="160" AutomationProperties.Name="{DynamicResource S.Cond.Attribute}" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:MetadataCondition}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{DynamicResource S.Cond.Metadata}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Property, UpdateSourceTrigger=PropertyChanged}" Width="190" Margin="0,0,8,6" VerticalAlignment="Center"
+                             AutomationProperties.Name="{DynamicResource S.Cond.Metadata}" />
+                    <ComboBox ItemsSource="{x:Static inf:EnumOptions.TextOperators}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                              SelectedValue="{Binding Operator}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" MinWidth="180" Margin="0,0,8,6" VerticalAlignment="Center"
+                             AutomationProperties.Name="{DynamicResource S.Editor.Value}" />
+                    <CheckBox Content="{DynamicResource S.Editor.CaseSensitive}" IsChecked="{Binding CaseSensitive}" Margin="0,0,8,6" />
+                </WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.MetadataHint}" Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:ContentCondition}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Cond.Content}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.TextOperators}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding Operator}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Editor.Operator}" />
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" MinWidth="240" Margin="0,0,8,6" VerticalAlignment="Center"
+                         AutomationProperties.Name="{DynamicResource S.Editor.Value}" />
+                <CheckBox Content="{DynamicResource S.Editor.CaseSensitive}" IsChecked="{Binding CaseSensitive}" Margin="0,0,8,6" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <!-- ============ Actions ============ -->
+        <DataTemplate x:Key="ConflictField">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{DynamicResource S.Act.IfExists}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{x:Static inf:EnumOptions.ConflictPolicies}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                          SelectedValue="{Binding OnConflict}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="200" AutomationProperties.Name="{DynamicResource S.Act.IfExists}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ActionRow">
+            <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="8" Margin="0,6,0,0">
+                <Border BorderBrush="{DynamicResource ThenBlock}" BorderThickness="3,0,0,0" CornerRadius="8,0,0,8" Padding="12,8,6,2">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Style="{StaticResource IconButton}" Content="&#xE70E;" Click="ActionUp_Click"
+                                    ToolTip="{DynamicResource S.Common.MoveUp}" AutomationProperties.Name="{DynamicResource S.Common.MoveUp}" />
+                            <Button Style="{StaticResource IconButton}" Content="&#xE70D;" Click="ActionDown_Click"
+                                    ToolTip="{DynamicResource S.Common.MoveDown}" AutomationProperties.Name="{DynamicResource S.Common.MoveDown}" />
+                            <Button Style="{StaticResource IconButton}" Content="&#xE711;" Click="RemoveAction_Click"
+                                    ToolTip="{DynamicResource S.Common.Remove}" AutomationProperties.Name="{DynamicResource S.Editor.RemoveAction}" />
+                        </StackPanel>
+                        <ContentPresenter Content="{Binding}" />
+                    </DockPanel>
+                </Border>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:MoveAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.MoveTo}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Tag="Destination" Click="BrowseFolder_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.MoveTo}" />
+                </DockPanel>
+                <WrapPanel Margin="170,0,0,0">
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" />
+                    <CheckBox Content="{DynamicResource S.Act.RemoveEmpty}" IsChecked="{Binding RemoveEmptySourceFolder}" Margin="0,0,8,6" />
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:CopyAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.CopyTo}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Tag="Destination" Click="BrowseFolder_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.CopyTo}" />
+                </DockPanel>
+                <ContentPresenter Margin="170,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" HorizontalAlignment="Left" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:RenameAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.RenameTo}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.RenameTo}" />
+                </DockPanel>
+                <ContentPresenter Margin="170,0,0,0" Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" HorizontalAlignment="Left" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:DeleteAction}">
+            <WrapPanel>
+                <TextBlock Text="{DynamicResource S.Act.DeleteToBin}" Style="{StaticResource BlockTitle}" Width="170" />
+                <CheckBox Content="{DynamicResource S.Act.Permanent}" IsChecked="{Binding Permanent}" Margin="0,0,12,6" Foreground="{DynamicResource Danger}" />
+                <CheckBox Content="{DynamicResource S.Act.RemoveEmpty}" IsChecked="{Binding RemoveEmptySourceFolder}" Margin="0,0,8,6" />
+            </WrapPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:CompressAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.CompressTo}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <TextBox Text="{Binding ArchivePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.CompressTo}" />
+                </DockPanel>
+                <WrapPanel Margin="170,0,0,0">
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" />
+                    <CheckBox Content="{DynamicResource S.Act.DeleteSource}" IsChecked="{Binding DeleteSource}" Margin="0,0,8,6" />
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:ExtractAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.ExtractTo}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Tag="Destination" Click="BrowseFolder_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.ExtractTo}" />
+                </DockPanel>
+                <WrapPanel Margin="170,0,0,0">
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" />
+                    <CheckBox Content="{DynamicResource S.Act.DeleteArchive}" IsChecked="{Binding DeleteArchive}" Margin="0,0,8,6" />
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:CreateShortcutAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.ShortcutIn}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Tag="Destination" Click="BrowseFolder_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.ShortcutIn}" />
+                </DockPanel>
+                <WrapPanel Margin="170,0,0,0">
+                    <TextBlock Text="{DynamicResource S.Act.ShortcutName}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding ShortcutName, UpdateSourceTrigger=PropertyChanged}" Width="180" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.ShortcutName}" />
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" />
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:OpenWithAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.OpenWithApp}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Click="BrowseApp_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding Application, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.OpenWithApp}" />
+                </DockPanel>
+                <DockPanel Margin="170,0,0,0">
+                    <TextBlock Text="{DynamicResource S.Act.Arguments}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.Arguments}" />
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type m:SortIntoSubfoldersAction}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="{DynamicResource S.Act.SortIn}" Style="{StaticResource BlockTitle}" Width="170" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.Common.Browse}" Tag="BaseFolder" Click="BrowseFolder_Click" Margin="0,0,8,6" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding BaseFolder, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.SortIn}" />
+                </DockPanel>
+                <WrapPanel Margin="170,0,0,0">
+                    <TextBlock Text="{DynamicResource S.Act.SortBy}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{x:Static inf:EnumOptions.SortModes}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                              SelectedValue="{Binding Mode}" Margin="0,0,8,6" VerticalAlignment="Center" MinWidth="150" AutomationProperties.Name="{DynamicResource S.Act.SortBy}" />
+                    <StackPanel x:Name="DateFields" Orientation="Horizontal" Visibility="Collapsed">
+                        <ComboBox ItemsSource="{x:Static inf:EnumOptions.DateFields}" SelectedValuePath="Value" DisplayMemberPath="Display"
+                                  SelectedValue="{Binding DateSource}" Margin="0,0,8,6" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource S.Act.DateSource}" />
+                        <TextBlock Text="{DynamicResource S.Act.DateFormat}" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding DateFormat, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="0,0,8,6" VerticalAlignment="Center"
+                                 AutomationProperties.Name="{DynamicResource S.Act.DateFormat}" ToolTip="{DynamicResource S.Act.DateFormatHint}" />
+                    </StackPanel>
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ConflictField}" />
+                </WrapPanel>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Mode}" Value="{x:Static m:SortMode.ByDate}">
+                    <Setter TargetName="DateFields" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel Margin="24,20">
+        <!-- Header -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Label Content="{DynamicResource S.Editor.RuleName}" Target="{Binding ElementName=NameBox}" />
+                <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="16" MaxWidth="520" HorizontalAlignment="Left" MinWidth="360" />
+            </StackPanel>
+            <CheckBox Grid.Column="1" VerticalAlignment="Bottom" Content="{DynamicResource S.Common.Enabled}" IsChecked="{Binding Enabled}" />
+        </Grid>
+
+        <!-- Footer -->
+        <Grid DockPanel.Dock="Bottom" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Click="Test_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" Margin="0,0,8,0" FontSize="13" />
+                    <TextBlock Text="{DynamicResource S.Editor.Test}" />
+                </StackPanel>
+            </Button>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Content="{DynamicResource S.Common.Cancel}" IsCancel="True" />
+                <Button Content="{DynamicResource S.Common.Save}" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="Save_Click" Margin="0" MinWidth="110" />
+            </StackPanel>
+        </Grid>
+
+        <Border DockPanel.Dock="Bottom" x:Name="TestPanel" Style="{StaticResource Card}" Padding="12" Margin="0,12,0,0" Visibility="Collapsed" MaxHeight="160">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="TestResult" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
+            </ScrollViewer>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,8,0">
+                <!-- IF -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border Background="{DynamicResource IfBlock}" CornerRadius="6" Padding="10,3" Margin="0,0,10,0">
+                                <TextBlock Text="{DynamicResource S.Editor.If}" Foreground="{DynamicResource IfBlockText}" FontWeight="Bold" />
+                            </Border>
+                            <TextBlock Text="{DynamicResource S.Editor.IfHint}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ContentPresenter Content="{Binding Condition}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- THEN -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <Button DockPanel.Dock="Right" Click="AddAction_Click" Margin="0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" FontSize="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{DynamicResource S.Editor.AddAction}" />
+                                </StackPanel>
+                            </Button>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="{DynamicResource ThenBlock}" CornerRadius="6" Padding="10,3" Margin="0,0,10,0">
+                                    <TextBlock Text="{DynamicResource S.Editor.Then}" Foreground="{DynamicResource ThenBlockText}" FontWeight="Bold" />
+                                </Border>
+                                <TextBlock Text="{DynamicResource S.Editor.ThenHint}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Actions}" ItemTemplate="{StaticResource ActionRow}" Focusable="False" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Token help -->
+                <Expander Header="{DynamicResource S.Editor.Tokens}" Margin="0,0,0,8">
+                    <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource S.Editor.TokensHint}" Style="{StaticResource Muted}" Margin="0,0,0,8" />
+                            <ItemsControl x:Name="TokenList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="360" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button HorizontalAlignment="Left" Padding="6,2" MinHeight="24" Click="Token_Click" Tag="{Binding Token}"
+                                                    ToolTip="{DynamicResource S.Editor.CopyToken}">
+                                                <TextBlock Text="{Binding Token}" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
+                                            </Button>
+                                            <TextBlock Grid.Column="1" Text="{Binding Help}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

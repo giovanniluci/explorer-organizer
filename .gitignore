@@ -1,0 +1,24 @@
+# Build output
+bin/
+obj/
+publish/
+artifacts/
+installer/Output/
+TestResults/
+*.user
+*.suo
+.vs/
+.vscode/
+
+# Local toolchain (downloaded by build.ps1 / setup)
+.tools/
+
+# Release binaries (published only via GitHub Releases)
+Explorer Ordanizer per Installazione/
+*.zip
+*.exe
+*.msi
+
+# Test/UI capture leftovers
+*.log
+docs/test-report.txt
