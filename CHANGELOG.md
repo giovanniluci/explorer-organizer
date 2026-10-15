@@ -23,5 +23,11 @@ First public release.
 - Fluent-style UI with Mica on Windows 11, light/dark/high-contrast themes, Italian and English.
 - Per-user installer (no admin rights) and portable edition; self-contained, no .NET install needed.
 
+### Security
+- "Open with" arguments: token values (metadata, `{match}`) can no longer close a quoted argument and inject extra ones.
+- Token values made only of dots (`.`, `..`) are replaced with `_`, so metadata cannot move files outside the destination.
+- Imported profiles are not activated automatically; their folders and any rule that opens programs or deletes
+  permanently start disabled.
+
 [Unreleased]: https://github.com/giovanniluci/explorer-organizer/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/giovanniluci/explorer-organizer/releases/tag/v1.0.0

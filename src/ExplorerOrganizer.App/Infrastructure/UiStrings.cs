@@ -34,7 +34,8 @@ internal static class UiStrings
         ["Msg.UnexpectedError"] = ("An unexpected error occurred. Your files were not touched by this error; details are in the activity log.", "Si è verificato un errore imprevisto. I file non sono stati toccati da questo errore; i dettagli sono nel registro attività."),
         ["Msg.UndoOk"] = ("Done: {0} step(s) reverted.", "Fatto: {0} passaggi ripristinati."),
         ["Msg.UndoErrors"] = ("{0} step(s) reverted, {1} could not be reverted:", "{0} passaggi ripristinati, {1} non ripristinabili:"),
-        ["Msg.Imported"] = ("Profile \"{0}\" imported ({1} rules). Its folders are disabled until you review them.", "Profilo \"{0}\" importato ({1} regole). Le sue cartelle sono disattivate finché non le controlli."),
+        ["Msg.Imported"] = ("Profile \"{0}\" imported ({1} rules). Its folders are disabled until you review them. Select it in the list to use it.", "Profilo \"{0}\" importato ({1} regole). Le sue cartelle sono disattivate finché non le controlli. Selezionalo nell'elenco per usarlo."),
+        ["Msg.ImportedRulesDisabled"] = ("{0} rules that open programs or delete permanently were disabled: check them before turning them on.", "{0} regole che aprono programmi o eliminano definitivamente sono state disattivate: controllale prima di riattivarle."),
         ["Msg.ImportFailed"] = ("The file is not a valid profile.", "Il file non è un profilo valido."),
         ["Msg.Exported"] = ("Saved to {0}", "Salvato in {0}"),
 

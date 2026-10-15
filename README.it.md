@@ -75,7 +75,8 @@ Tema chiaro/scuro automatico (o scelto in Impostazioni), italiano/inglese. Scher
 
 Un **profilo** contiene regole e cartelle monitorate; il *profilo attivo* si usa per drag & drop e menu di Explorer.
 Le regole sono valutate **dall'alto verso il basso: vince la prima che corrisponde**. Profili importabili/esportabili
-in JSON (*Profili e regole → Importa/Esporta*). Le cartelle di un profilo importato partono disattivate.
+in JSON (*Profili e regole → Importa/Esporta*). Un profilo importato non diventa attivo da solo: le sue cartelle e le regole che aprono programmi o eliminano
+definitivamente partono disattivate.
 
 **Condizioni** (combinabili con gruppi TUTTE/ALMENO UNA annidati e NON su ogni condizione):
 nome/percorso (è, contiene, inizia, finisce, wildcard `*` `?`, regex), estensione, tipo di file (immagini, video,

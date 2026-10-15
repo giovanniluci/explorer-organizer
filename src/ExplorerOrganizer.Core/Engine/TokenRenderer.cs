@@ -31,7 +31,7 @@ public enum RenderMode
     FileName,
     /// <summary>A folder path: token values are sanitized, separators in the template are kept; relative paths are resolved against the file folder.</summary>
     Path,
-    /// <summary>Command-line arguments: values are inserted verbatim.</summary>
+    /// <summary>Command-line arguments: values are inserted as is, except for quotes and trailing backslashes (see EscapeArgument).</summary>
     Raw,
 }
 
@@ -141,11 +141,27 @@ public static class TokenRenderer
         value = ApplyFilters(value ?? "", parts.Skip(1));
         return mode switch
         {
-            RenderMode.Raw => value,
+            RenderMode.Raw => EscapeArgument(value),
             RenderMode.Path when isPath => string.Join('\\', value.Split('\\').Select((seg, idx) => idx == 0 && seg.EndsWith(':') ? seg : SanitizeSegment(seg, trim: false))),
-            _ => SanitizeSegment(value, trim: false),
+            _ => NoDotSegment(SanitizeSegment(value, trim: false)),
         };
     }
+
+    /// <summary>
+    /// A token value inside command-line arguments must stay one argument: double quotes (never valid in file names,
+    /// but possible in metadata or {match}) are removed, and trailing backslashes are doubled so that a closing quote
+    /// in the template is not escaped (CommandLineToArgvW rules).
+    /// </summary>
+    private static string EscapeArgument(string value)
+    {
+        value = value.Replace("\"", "");
+        int trailing = value.Length - value.TrimEnd('\\').Length;
+        return trailing == 0 ? value : value + new string('\\', trailing);
+    }
+
+    /// <summary>A token value made only of dots ("." or "..") would climb out of the destination folder: use underscores.</summary>
+    private static string NoDotSegment(string value) =>
+        value.Length > 0 && value.Trim().Trim('.').Length == 0 ? new string('_', value.Length) : value;
 
     private static string? Metadata(string prefix, string? arg, FileContext f, out bool isPath)
     {

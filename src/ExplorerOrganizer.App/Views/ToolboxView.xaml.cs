@@ -114,11 +114,14 @@ public partial class ToolboxView : UserControl, IRefreshablePage
         if (dlg.ShowDialog(Owner) != true) return;
         try
         {
-            var p = JsonStore.ImportProfile(dlg.FileName);
-            foreach (var f in p.Folders) f.Enabled = false; // imported folders start disabled: review them first
+            // folders and risky rules start disabled, and the profile is not made active: review it first
+            var p = JsonStore.ImportProfile(dlg.FileName, out int disabledRules);
             Host.Library.Profiles.Add(p);
-            Select(p);
-            Dialogs.Info(string.Format(Loc.T("Msg.Imported"), p.Name, p.Rules.Count));
+            Host.ProfilesChanged();
+            Refresh();
+            var msg = string.Format(Loc.T("Msg.Imported"), p.Name, p.Rules.Count);
+            if (disabledRules > 0) msg += "\n\n" + string.Format(Loc.T("Msg.ImportedRulesDisabled"), disabledRules);
+            Dialogs.Info(msg);
         }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or InvalidDataException or NotSupportedException or UnauthorizedAccessException)
         {

@@ -66,14 +66,26 @@ public static class JsonStore
     public static void ExportProfile(Profile profile, string file) => Save(file, profile);
 
     /// <summary>Imports a profile. New ids are generated so an import never clashes with existing profiles.</summary>
-    public static Profile ImportProfile(string file)
+    public static Profile ImportProfile(string file) => ImportProfile(file, out _);
+
+    /// <summary>
+    /// Imports a profile. Folders start disabled, and so do rules that launch programs ("Open with") or delete
+    /// permanently: a profile from someone else must be reviewed before it can run anything.
+    /// </summary>
+    public static Profile ImportProfile(string file, out int disabledRules)
     {
         var node = JsonNode.Parse(File.ReadAllText(file), documentOptions: DocumentOptions) ?? throw new InvalidDataException("Empty profile");
         LegacyNotMigration.Migrate(node, new List<MigrationNote>());
         var profile = node.Deserialize<Profile>(Json.Options) ?? throw new InvalidDataException("Empty profile");
         profile.Id = Guid.NewGuid();
         foreach (var r in profile.Rules) r.Id = Guid.NewGuid();
-        foreach (var f in profile.Folders) { f.Id = Guid.NewGuid(); f.LastRun = null; }
+        foreach (var f in profile.Folders) { f.Id = Guid.NewGuid(); f.LastRun = null; f.Enabled = false; }
+        disabledRules = 0;
+        foreach (var r in profile.Rules.Where(r => r.Enabled && r.Actions.Any(a => a is OpenWithAction or DeleteAction { Permanent: true })))
+        {
+            r.Enabled = false;
+            disabledRules++;
+        }
         return profile;
     }
 }

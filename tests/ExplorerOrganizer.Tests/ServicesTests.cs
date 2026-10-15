@@ -149,4 +149,24 @@ public class ServicesTests
         Assert.Contains("plain", new ContentReader().Read(t.File("n.txt", "plain text")));
         Assert.Equal("", new ContentReader().Read(t.Combine("missing.txt")));
     }
+
+    [Fact]
+    public void Import_disables_folders_and_rules_that_launch_programs_or_delete_permanently()
+    {
+        using var t = new TempDir();
+        var p = new Profile { Name = "shared" };
+        p.Rules.Add(Build.Rule(new AllFilesCondition(), new MoveAction { Destination = "{folder}\\x" }));
+        p.Rules.Add(Build.Rule(new AllFilesCondition(), new OpenWithAction { Application = "cmd.exe", Arguments = "/c calc" }));
+        p.Rules.Add(Build.Rule(new AllFilesCondition(), new DeleteAction { Permanent = true }));
+        p.Rules.Add(Build.Rule(new AllFilesCondition(), new DeleteAction()));
+        p.Folders.Add(new WatchedFolder { Path = t.Path, Enabled = true });
+        var file = t.Combine("p.json");
+        JsonStore.ExportProfile(p, file);
+
+        var back = JsonStore.ImportProfile(file, out int disabled);
+
+        Assert.Equal(2, disabled);
+        Assert.Equal(new[] { true, false, false, true }, back.Rules.Select(r => r.Enabled));
+        Assert.All(back.Folders, f => Assert.False(f.Enabled));
+    }
 }

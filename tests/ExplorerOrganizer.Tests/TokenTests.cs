@@ -163,4 +163,56 @@ public class TokenTests
         var f = Build.Context(t.File(@"a\b\c.txt"), root: t.Path);
         Assert.Equal(System.IO.Path.Combine("D:\\Backup", "a", "b"), TokenRenderer.RenderPath(@"D:\Backup\{subdir}", f, new RunState(), Build.Now));
     }
+
+    [Theory]
+    [InlineData("..")]
+    [InlineData(".")]
+    [InlineData(" .. ")]
+    public void Token_values_made_of_dots_never_leave_the_destination(string value)
+    {
+        using var t = new TempDir();
+        var f = Build.Context(t.File("a.txt"));
+        f.Captures["1"] = value;
+        var dest = t.Combine("out");
+        var p = TokenRenderer.RenderPath(dest + @"\{match:1}\{match:1}", f, new RunState(), Build.Now);
+        Assert.StartsWith(dest + "\\", p);
+        Assert.DoesNotContain("..", p[dest.Length..]);
+    }
+
+    [Fact]
+    public void Literal_dot_dot_in_the_template_still_works()
+    {
+        using var t = new TempDir();
+        var f = Build.Context(t.File(@"sub\a.txt"));
+        Assert.Equal(t.Combine("up"), TokenRenderer.RenderPath(@"{folder}\..\up", f, new RunState(), Build.Now));
+    }
+
+    [Fact]
+    public void Arguments_cannot_break_out_of_quotes()
+    {
+        using var t = new TempDir();
+        var f = Build.Context(t.File("a.txt"));
+        f.Captures["1"] = "x\" --evil \"y";
+        f.Captures["2"] = @"C:\dir\";
+        var args = TokenRenderer.Render("\"{match:1}\" \"{match:2}\"", f, new RunState(), Build.Now, RenderMode.Raw);
+        Assert.Equal(new[] { "x --evil y", @"C:\dir\" }, CommandLineToArgs(args));
+    }
+
+    private static string[] CommandLineToArgs(string args)
+    {
+        var ptr = CommandLineToArgvW("app.exe " + args, out int n);
+        try
+        {
+            var result = new string[n - 1];
+            for (int i = 1; i < n; i++) result[i - 1] = System.Runtime.InteropServices.Marshal.PtrToStringUni(System.Runtime.InteropServices.Marshal.ReadIntPtr(ptr, i * IntPtr.Size))!;
+            return result;
+        }
+        finally { LocalFree(ptr); }
+    }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr CommandLineToArgvW(string cmdLine, out int numArgs);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern IntPtr LocalFree(IntPtr mem);
 }
