@@ -35,9 +35,11 @@ jobs:
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item installer/Output/ExplorerOrganizer-Setup.exe dist/
           Copy-Item artifacts/ExplorerOrganizer-Portable.zip dist/
-          Get-ChildItem dist -File | ForEach-Object {
+          $lines = Get-ChildItem dist -File | ForEach-Object {
             '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          }
+          # LF line endings so that `sha256sum -c` also works on Linux, macOS and Git Bash
+          [IO.File]::WriteAllText("$PWD/dist/SHA256SUMS.txt", (($lines -join "`n") + "`n"))
           Get-Content dist/SHA256SUMS.txt
 
       - name: Release notes from CHANGELOG.md
