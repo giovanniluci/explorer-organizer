@@ -69,8 +69,8 @@ public static class JsonStore
     public static Profile ImportProfile(string file) => ImportProfile(file, out _);
 
     /// <summary>
-    /// Imports a profile. Folders start disabled, and so do rules that launch programs ("Open with") or delete
-    /// permanently: a profile from someone else must be reviewed before it can run anything.
+    /// Imports a profile. Its folders and rules start disabled: a profile from someone else must be reviewed
+    /// before it can run anything.
     /// </summary>
     public static Profile ImportProfile(string file, out int disabledRules)
     {
@@ -80,8 +80,9 @@ public static class JsonStore
         profile.Id = Guid.NewGuid();
         foreach (var r in profile.Rules) r.Id = Guid.NewGuid();
         foreach (var f in profile.Folders) { f.Id = Guid.NewGuid(); f.LastRun = null; f.Enabled = false; }
+        // any action can be risky in someone else's profile (e.g. extracting into the Startup folder)
         disabledRules = 0;
-        foreach (var r in profile.Rules.Where(r => r.Enabled && r.Actions.Any(a => a is OpenWithAction or DeleteAction { Permanent: true })))
+        foreach (var r in profile.Rules.Where(r => r.Enabled))
         {
             r.Enabled = false;
             disabledRules++;

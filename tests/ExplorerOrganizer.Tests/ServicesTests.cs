@@ -151,7 +151,7 @@ public class ServicesTests
     }
 
     [Fact]
-    public void Import_disables_folders_and_rules_that_launch_programs_or_delete_permanently()
+    public void Import_disables_folders_and_all_rules()
     {
         using var t = new TempDir();
         var p = new Profile { Name = "shared" };
@@ -165,8 +165,8 @@ public class ServicesTests
 
         var back = JsonStore.ImportProfile(file, out int disabled);
 
-        Assert.Equal(2, disabled);
-        Assert.Equal(new[] { true, false, false, true }, back.Rules.Select(r => r.Enabled));
+        Assert.Equal(4, disabled);
+        Assert.All(back.Rules, r => Assert.False(r.Enabled));
         Assert.All(back.Folders, f => Assert.False(f.Enabled));
     }
 }

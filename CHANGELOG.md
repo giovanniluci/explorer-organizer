@@ -26,8 +26,7 @@ First public release.
 ### Security
 - "Open with" arguments: token values (metadata, `{match}`) can no longer close a quoted argument and inject extra ones.
 - Token values made only of dots (`.`, `..`) are replaced with `_`, so metadata cannot move files outside the destination.
-- Imported profiles are not activated automatically; their folders and any rule that opens programs or deletes
-  permanently start disabled.
+- Imported profiles are not activated automatically, and all their folders and rules start disabled.
 
 [Unreleased]: https://github.com/giovanniluci/explorer-organizer/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/giovanniluci/explorer-organizer/releases/tag/v1.0.0
