@@ -26,11 +26,13 @@ public sealed class FilesReadyEventArgs : EventArgs
 /// </summary>
 public sealed class FolderMonitor : IDisposable
 {
+    /// <summary>A watched folder of a profile; <see cref="Order"/> is its position in the configuration.</summary>
+    private sealed record Target(int Order, Profile Profile, WatchedFolder Folder, string Root);
+
     private sealed class Pending
     {
-        public required Profile Profile;
-        public required WatchedFolder Folder;
-        public required string Root;
+        /// <summary>Every profile whose watcher reported the file (several profiles may watch the same folder).</summary>
+        public readonly List<Target> Targets = new();
         public DateTime FirstSeen;
         public DateTime LastEvent;
         public long LastSize = -1;
@@ -83,11 +85,11 @@ public sealed class FolderMonitor : IDisposable
                             NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size | NotifyFilters.LastWrite,
                             InternalBufferSize = 64 * 1024,
                         };
-                        var (p, f, root) = (profile, folder, path);
-                        w.Created += (_, e) => Enqueue(e.FullPath, p, f, root);
+                        var target = new Target(_watchers.Count, profile, folder, path);
+                        w.Created += (_, e) => Enqueue(e.FullPath, target);
                         w.Changed += (_, e) => Touch(e.FullPath);
-                        w.Renamed += (_, e) => Enqueue(e.FullPath, p, f, root);
-                        w.Error += (_, _) => { foreach (var input in Scan(f)) Enqueue(input.Path, p, f, root); };
+                        w.Renamed += (_, e) => Enqueue(e.FullPath, target);
+                        w.Error += (_, _) => { foreach (var input in Scan(folder)) Enqueue(input.Path, target); };
                         w.EnableRaisingEvents = true;
                         _watchers[folder.Id] = w;
                     }
@@ -147,22 +149,25 @@ public sealed class FolderMonitor : IDisposable
         return TextMatcher.IsMatch(fileName, TextOperator.Wildcard, patterns, caseSensitive: false);
     }
 
-    private void Enqueue(string path, Profile profile, WatchedFolder folder, string root)
+    private void Enqueue(string path, Target target)
     {
         if (Paused) return;
         if (Directory.Exists(path))
         {
-            if (!folder.IncludeSubfolders) return;
-            try { foreach (var f in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)) Enqueue(f, profile, folder, root); }
+            if (!target.Folder.IncludeSubfolders) return;
+            try { foreach (var f in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)) Enqueue(f, target); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
             return;
         }
         if (IsIgnored(Path.GetFileName(path), _settings().IgnorePatterns)) return;
         if (_suppressed.TryGetValue(path, out var until) && until > DateTime.UtcNow) return;
         var now = DateTime.UtcNow;
-        _pending.AddOrUpdate(path,
-            _ => new Pending { Profile = profile, Folder = folder, Root = root, FirstSeen = now, LastEvent = now },
-            (_, existing) => { existing.LastEvent = now; return existing; });
+        var pending = _pending.GetOrAdd(path, _ => new Pending { FirstSeen = now });
+        lock (pending)
+        {
+            pending.LastEvent = now;
+            if (!pending.Targets.Contains(target)) pending.Targets.Add(target);
+        }
     }
 
     private void Touch(string path)
@@ -181,7 +186,7 @@ public sealed class FolderMonitor : IDisposable
 
             var now = DateTime.UtcNow;
             var stability = TimeSpan.FromSeconds(Math.Max(1, _settings().StabilitySeconds));
-            var ready = new List<(string Path, Pending P)>();
+            var ready = new List<(string Path, Target T)>();
             foreach (var (path, p) in _pending)
             {
                 if (now - p.FirstSeen > TimeSpan.FromHours(2)) { _pending.TryRemove(path, out _); continue; }
@@ -191,13 +196,14 @@ public sealed class FolderMonitor : IDisposable
                 try { size = new FileInfo(path).Length; } catch { continue; }
                 if (size != p.LastSize) { p.LastSize = size; p.LastEvent = now; continue; } // still growing
                 if (!CanOpenExclusively(path)) { p.LastEvent = now; continue; } // still being written
-                ready.Add((path, p));
+                if (!_pending.TryRemove(path, out _)) continue;
+                lock (p) ready.AddRange(p.Targets.Select(target => (path, target)));
             }
-            foreach (var group in ready.GroupBy(r => (r.P.Profile, r.P.Folder)))
+            if (Paused) return;
+            // In configuration order: runs are serialized, and a later profile skips files an earlier one already moved.
+            foreach (var group in ready.GroupBy(r => r.T).OrderBy(g => g.Key.Order))
             {
-                foreach (var r in group) _pending.TryRemove(r.Path, out _);
-                if (Paused) continue;
-                var files = group.Select(r => new FileInput(r.Path, r.P.Root)).ToList();
+                var files = group.Select(r => new FileInput(r.Path, group.Key.Root)).ToList();
                 FilesReady?.Invoke(this, new FilesReadyEventArgs(group.Key.Profile, group.Key.Folder, files, "watch"));
             }
         }

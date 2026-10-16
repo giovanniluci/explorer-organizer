@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-16
+
+### Fixed
+- Real-time monitoring: when two or more profiles watch the same folder, a new file was handed only to the profile
+  whose watcher reported it first, so it was often left in place until "Organize now". Every profile watching the
+  folder now gets the file, in profile order.
+
 ## [1.0.0] - 2026-10-15
 
 First public release.
@@ -28,5 +35,6 @@ First public release.
 - Token values made only of dots (`.`, `..`) are replaced with `_`, so metadata cannot move files outside the destination.
 - Imported profiles are not activated automatically, and all their folders and rules start disabled.
 
-[Unreleased]: https://github.com/giovanniluci/explorer-organizer/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/giovanniluci/explorer-organizer/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/giovanniluci/explorer-organizer/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/giovanniluci/explorer-organizer/releases/tag/v1.0.0

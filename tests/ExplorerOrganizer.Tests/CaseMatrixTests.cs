@@ -654,6 +654,26 @@ public class CaseMatrixTests
     }
 
     [Fact]
+    public void Trigger_realtime_hands_a_new_file_to_every_profile_watching_the_folder()
+    {
+        using var t = new TempDir();
+        var settings = new AppSettings { StabilitySeconds = 1 };
+        using var monitor = new FolderMonitor(() => settings);
+        var first = new Profile { Name = "Downloads" };
+        first.Folders.Add(new WatchedFolder { Path = t.Path, Trigger = TriggerMode.Realtime });
+        var second = new Profile { Name = "Fonts" };
+        second.Folders.Add(new WatchedFolder { Path = t.Path, Trigger = TriggerMode.Realtime, IncludeSubfolders = true });
+        var got = new List<string>();
+        monitor.FilesReady += (_, e) => { lock (got) got.Add(e.Profile.Name); };
+        monitor.Configure(new[] { first, second });
+        t.File("new.txt", "content");
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        while (DateTime.UtcNow < deadline) { lock (got) if (got.Count >= 2) break; Thread.Sleep(200); }
+        Thread.Sleep(1500); // no duplicates afterwards
+        lock (got) Assert.Equal(new[] { "Downloads", "Fonts" }, got);
+    }
+
+    [Fact]
     public void Trigger_realtime_ignores_partial_downloads_and_waits_for_unlock()
     {
         using var t = new TempDir();
